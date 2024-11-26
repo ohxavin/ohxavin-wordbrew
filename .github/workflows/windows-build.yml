@@ -1,0 +1,44 @@
+name: Windows Build and Release
+
+on:
+  push:
+    tags:
+      - "Release*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.12.2"
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: "1.82.0"
+          target: x86_64-pc-windows-msvc
+          override: true
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli
+
+      - name: Build Tauri app
+        run: npm run tauri build
+
+      - name: Upload to GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: |
+            src-tauri/target/release/bundle/**
+          token: ${{ secrets.gu }}
+          tag: latest
+          name: Windows Release
